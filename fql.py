@@ -12,6 +12,7 @@ from urllib.parse import quote,unquote
 cookie=''
 start=0
 end=50
+
 offset=5#这个不要乱改
 orderurl='https://order.m.fenqile.com/route0001/order/getOrderInfoDetail.json'
 smsurl='https://trade.m.fenqile.com/order/query_send_sms.json'
@@ -21,6 +22,8 @@ print('Powered by 杨大师')
 print('感谢饲养员爸爸赞助')
 import time
 sj=int(time.time())-60
+if cookie=='':
+    cookie=input('请填入cookie：')
 
 def getsms():
     global smsi
@@ -51,25 +54,30 @@ while start<end:
     od=requests.post(orderurl,data='{"system":{"controller":""},"data":{"state_filter":"","offset":%d,"limit":%d}}'%(start,offset),headers={'Cookie':cookie})
     js=json.loads(od.text)
 
+    try:
+        fout = open('km.txt', 'a+', encoding='utf8')
+        for i in js['data']['result_rows']:
+            inde=inde+1
+            if i['order_info']['order_state']!=430:
+                continue
+            id=i['order_info']['order_id']
+            name=i['template_content'][1]['order_goods_info']['goods_info']['product_info']
+            km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":800,"is_weex":1}'%(getsms(),id),headers={'Cookie':cookie})
+            kmj=json.loads(km.text)
+            timeStamp = int(i['order_info']['create_time'])/1000
+            timeArray = time.localtime(timeStamp)
+            otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
 
-    for i in js['data']['result_rows']:
-        inde=inde+1
-        if i['order_info']['order_state']!=430:
-            continue
-        id=i['order_info']['order_id']
-        name=i['template_content'][1]['order_goods_info']['goods_info']['product_info']
-        km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":800,"is_weex":1}'%(getsms(),id),headers={'Cookie':cookie})
-        kmj=json.loads(km.text)
-        timeStamp = int(i['order_info']['create_time'])/1000
-        timeArray = time.localtime(timeStamp)
-        otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
-
-        if 'virtual_info' in kmj:
-            kmjg=kmj['virtual_info']['fulu_info'][0]
-            print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
-        else:
-            print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html'%(inde,id))
-            print('接口返回：%s'%json.dumps(json.loads(km.text),ensure_ascii=False))
-        pass
-    start=start+offset
+            if 'virtual_info' in kmj:
+                kmjg=kmj['virtual_info']['fulu_info'][0]
+                print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
+                fout.write("%s\t%s\n"%(kmjg['card_number']['value'],kmjg['passwd']['value']))
+            else:
+                print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html'%(inde,id))
+                print('接口返回：%s'%json.dumps(json.loads(km.text),ensure_ascii=False))
+            pass
+        start=start+offset
+        fout.close()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 print('一共获取了%d个订单，自动跳过了关闭等等状态的订单'%inde)
