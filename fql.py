@@ -9,7 +9,7 @@ import base64
 from urllib.parse import quote,unquote
 ##改下面的cookie start end  不用我说吧，验证码自己获取。
 ##start0是第一单，end15一共报15张，从0到14。
-cookie='session=d464c2991ec641ea8e0519aee53d2c14; uid=11761418; _SUTC_AUTH=1; _SUTC=e4f93bd60987d6d65feaeebe00e8fb8326ee170b; fs_tag=15FABAF8B8E3C42C386BD84BFB0E4128; www_token_id=kX%2Fop5CDm4vtfDGDVJX2HZD5ij5OXi8eaEqzinhtRwSYC4iYK5HDAItVJ2LBTEuaP%2BAvrLjGvIZr7DH46Odrzw%3D%3D; tgw_l7_route=d9a5a79939d21eb92ffc092d933969f6'
+cookie=''
 start=0
 end=50
 offset=5#这个不要乱改
@@ -32,7 +32,7 @@ def getsms():
             '%e6%84%9f%e8%b0%a2%e4%b8%80%e4%bd%8d%e4%b8%8d%e6%84%bf%e9%80%8f%e9%9c%b2%e5%a7%93%e5%90%8d%e7%9a%84FGH%e5%85%88%e7%94%9f',
             'utf-8'))
         print(unquote(
-            'FGH%e5%85%88%e7%94%9f%e7%9a%84%e8%8b%b9%e6%9e%9c%e5%8d%a1%e4%bb%b7%e6%a0%bc%e9%ab%98%e5%9b%9e%e6%ac%be%e5%bf%ab%ef%bc%8c%e6%ac%a2%e8%bf%8e%e6%94%af%e6%8c%81%ef%bc%8cVX%ef%bc%9afengGH520',
+            'FGH%e5%85%88%e7%94%9f%e7%9a%84%e8%8b%b9%e6%9e%9c%e5%8d%a1%e4%bb%b7%e6%a0%bc%e9%ab%98%e5%9b%9e%e6%ac%be%e5%bf%ab%ef%bc%8c%e6%ac%a2%e8%bf%8e%e6%94%af%e6%8c%81%ef%bc%8cVx%ef%bc%9aappstoremall',
             'utf-8'))
 
         if input('是否自动发马？温馨提示：60秒间隔哦。是就回复1，不是你随意，请回复：')=='1':
