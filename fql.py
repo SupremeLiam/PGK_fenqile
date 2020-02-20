@@ -6,13 +6,15 @@
 import requests
 import json
 import base64
+import os
 from urllib.parse import quote,unquote
 ##改下面的cookie start end  不用我说吧，验证码自己获取。
-##start0是第一单，end15一共报15张，从0到14。
-cookie=''
-start=48
-end=50
-
+print('start0是第一单，end15一共报15张，从0到14。')
+cookie=input('请填入cookie：')
+start=input('请输入开始订单数（一般是0）：')
+end=input('请输入结束订单数（可以是999）：')
+start=int(start)
+end=int(end)
 offset=5#这个不要乱改
 orderurl='https://order.m.fenqile.com/route0001/order/getOrderInfoDetail.json'
 smsurl='https://trade.m.fenqile.com/order/query_send_sms.json'
@@ -22,8 +24,7 @@ print('Powered by 杨大师')
 print('感谢饲养员爸爸赞助')
 import time
 sj=int(time.time())-60
-if cookie=='':
-    cookie=input('请填入cookie：')
+
 
 def getsms():
     global smsi
@@ -88,3 +89,5 @@ while start<end:
         print(f"Unexpected error: {e}")
         print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html' % (inde, id))
 print('一共获取了%d个订单，自动跳过了关闭等等状态的订单'%inde)
+os.system('pause') #暂停程序
+
