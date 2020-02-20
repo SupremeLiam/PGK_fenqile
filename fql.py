@@ -10,7 +10,7 @@ from urllib.parse import quote,unquote
 ##改下面的cookie start end  不用我说吧，验证码自己获取。
 ##start0是第一单，end15一共报15张，从0到14。
 cookie=''
-start=0
+start=48
 end=50
 
 offset=5#这个不要乱改
@@ -57,12 +57,13 @@ while start<end:
     try:
         fout = open('km.txt', 'a+', encoding='utf8')
         for i in js['data']['result_rows']:
-            inde=inde+1
+
             if i['order_info']['order_state']!=430:
                 continue
+            otype=i['order_info']['sale_type']
             id=i['order_info']['order_id']
             name=i['template_content'][1]['order_goods_info']['goods_info']['product_info']
-            km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":800,"is_weex":1}'%(getsms(),id),headers={'Cookie':cookie})
+            km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":%d,"is_weex":1}'%(getsms(),id,otype),headers={'Cookie':cookie})
             kmj=json.loads(km.text)
             timeStamp = int(i['order_info']['create_time'])/1000
             timeArray = time.localtime(timeStamp)
@@ -70,8 +71,13 @@ while start<end:
 
             if 'virtual_info' in kmj:
                 kmjg=kmj['virtual_info']['fulu_info'][0]
-                print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
-                fout.write("%s\t%s\n"%(kmjg['card_number']['value'],kmjg['passwd']['value']))
+                inde = inde + 1
+                if otype==800:
+                    print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
+                    fout.write("%s\t%s\n"%(kmjg['card_number']['value'],kmjg['passwd']['value']))
+                if otype==400:
+                    print("%s\t%s\t%s"%(kmjg['passwd']['value'],name,otherStyleTime))
+                    fout.write("%s\n"%(kmjg['passwd']['value']))
             else:
                 print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html'%(inde,id))
                 print('接口返回：%s'%json.dumps(json.loads(km.text),ensure_ascii=False))
@@ -80,4 +86,5 @@ while start<end:
         fout.close()
     except Exception as e:
         print(f"Unexpected error: {e}")
+        print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html' % (inde, id))
 print('一共获取了%d个订单，自动跳过了关闭等等状态的订单'%inde)
