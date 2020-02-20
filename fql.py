@@ -6,12 +6,15 @@
 import requests
 import json
 import base64
+import os
 from urllib.parse import quote,unquote
 ##改下面的cookie start end  不用我说吧，验证码自己获取。
-##start0是第一单，end15一共报15张，从0到14。
-cookie='session=d464c2991ec641ea8e0519aee53d2c14; uid=11761418; _SUTC_AUTH=1; _SUTC=e4f93bd60987d6d65feaeebe00e8fb8326ee170b; fs_tag=15FABAF8B8E3C42C386BD84BFB0E4128; www_token_id=kX%2Fop5CDm4vtfDGDVJX2HZD5ij5OXi8eaEqzinhtRwSYC4iYK5HDAItVJ2LBTEuaP%2BAvrLjGvIZr7DH46Odrzw%3D%3D; tgw_l7_route=d9a5a79939d21eb92ffc092d933969f6'
-start=0
-end=50
+print('start0是第一单，end15一共报15张，从0到14。')
+cookie=input('请填入cookie：')
+start=input('请输入开始订单数（一般是0）：')
+end=input('请输入结束订单数（可以是999）：')
+start=int(start)
+end=int(end)
 offset=5#这个不要乱改
 orderurl='https://order.m.fenqile.com/route0001/order/getOrderInfoDetail.json'
 smsurl='https://trade.m.fenqile.com/order/query_send_sms.json'
@@ -21,6 +24,7 @@ print('Powered by 杨大师')
 print('感谢饲养员爸爸赞助')
 import time
 sj=int(time.time())-60
+
 
 def getsms():
     global smsi
@@ -32,7 +36,7 @@ def getsms():
             '%e6%84%9f%e8%b0%a2%e4%b8%80%e4%bd%8d%e4%b8%8d%e6%84%bf%e9%80%8f%e9%9c%b2%e5%a7%93%e5%90%8d%e7%9a%84FGH%e5%85%88%e7%94%9f',
             'utf-8'))
         print(unquote(
-            'FGH%e5%85%88%e7%94%9f%e7%9a%84%e8%8b%b9%e6%9e%9c%e5%8d%a1%e4%bb%b7%e6%a0%bc%e9%ab%98%e5%9b%9e%e6%ac%be%e5%bf%ab%ef%bc%8c%e6%ac%a2%e8%bf%8e%e6%94%af%e6%8c%81%ef%bc%8cVX%ef%bc%9afengGH520',
+            'FGH%e5%85%88%e7%94%9f%e7%9a%84%e8%8b%b9%e6%9e%9c%e5%8d%a1%e4%bb%b7%e6%a0%bc%e9%ab%98%e5%9b%9e%e6%ac%be%e5%bf%ab%ef%bc%8c%e6%ac%a2%e8%bf%8e%e6%94%af%e6%8c%81%ef%bc%8cVx%ef%bc%9aappstoremall',
             'utf-8'))
 
         if input('是否自动发马？温馨提示：60秒间隔哦。是就回复1，不是你随意，请回复：')=='1':
@@ -51,25 +55,39 @@ while start<end:
     od=requests.post(orderurl,data='{"system":{"controller":""},"data":{"state_filter":"","offset":%d,"limit":%d}}'%(start,offset),headers={'Cookie':cookie})
     js=json.loads(od.text)
 
+    try:
+        fout = open('km.txt', 'a+', encoding='utf8')
+        for i in js['data']['result_rows']:
 
-    for i in js['data']['result_rows']:
-        inde=inde+1
-        if i['order_info']['order_state']!=430:
-            continue
-        id=i['order_info']['order_id']
-        name=i['template_content'][1]['order_goods_info']['goods_info']['product_info']
-        km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":800,"is_weex":1}'%(getsms(),id),headers={'Cookie':cookie})
-        kmj=json.loads(km.text)
-        timeStamp = int(i['order_info']['create_time'])/1000
-        timeArray = time.localtime(timeStamp)
-        otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
+            if i['order_info']['order_state']!=430:
+                continue
+            otype=i['order_info']['sale_type']
+            id=i['order_info']['order_id']
+            name=i['template_content'][1]['order_goods_info']['goods_info']['product_info']
+            km=requests.post(kmurl,'{"send_type":8,"sms_code":"%s","order_id":"%s","sale_type":%d,"is_weex":1}'%(getsms(),id,otype),headers={'Cookie':cookie})
+            kmj=json.loads(km.text)
+            timeStamp = int(i['order_info']['create_time'])/1000
+            timeArray = time.localtime(timeStamp)
+            otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
 
-        if 'virtual_info' in kmj:
-            kmjg=kmj['virtual_info']['fulu_info'][0]
-            print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
-        else:
-            print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html'%(inde,id))
-            print('接口返回：%s'%json.dumps(json.loads(km.text),ensure_ascii=False))
-        pass
-    start=start+offset
+            if 'virtual_info' in kmj:
+                kmjg=kmj['virtual_info']['fulu_info'][0]
+                inde = inde + 1
+                if otype==800:
+                    print("%s\t%s\t%s\t%s"%(kmjg['card_number']['value'],kmjg['passwd']['value'],name,otherStyleTime))
+                    fout.write("%s\t%s\n"%(kmjg['card_number']['value'],kmjg['passwd']['value']))
+                if otype==400:
+                    print("%s\t%s\t%s"%(kmjg['passwd']['value'],name,otherStyleTime))
+                    fout.write("%s\n"%(kmjg['passwd']['value']))
+            else:
+                print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html'%(inde,id))
+                print('接口返回：%s'%json.dumps(json.loads(km.text),ensure_ascii=False))
+            pass
+        start=start+offset
+        fout.close()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        print('订单异常第%d个订单，订单地址： https://trade.m.fenqile.com/order/detail/%s.html' % (inde, id))
 print('一共获取了%d个订单，自动跳过了关闭等等状态的订单'%inde)
+os.system('pause') #暂停程序
+
